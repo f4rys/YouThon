@@ -1,8 +1,10 @@
 from pytube import YouTube
 import pytube
-from PyQt6.QtWidgets import QApplication, QWidget, QComboBox, QMainWindow, QVBoxLayout, QPushButton, QLineEdit, QProgressBar
+from PyQt6.QtWidgets import QApplication, QWidget, QComboBox, QMainWindow, QVBoxLayout, QPushButton, QLineEdit, QProgressBar, QLabel
 import sys
 from threading import Thread
+from PyQt6.QtGui import QPixmap, QColor
+import requests
 
 # https://www.youtube.com/watch?v=D-eDNDfU3oY
 
@@ -21,13 +23,19 @@ class MainWindow(QMainWindow):
 
         self.available_settings = {}
         self.selected_settings = None
+        self.url = ''
+
         self.choose_settings = QComboBox()
         self.choose_settings.currentTextChanged.connect(self.item_selected)
+
+        self.label  = QLabel()
+        self.pixmap = QPixmap()
 
         self.download_button = QPushButton("Download", self)
         self.download_button.clicked.connect(self.download)
 
         self.input_line = QLineEdit(self)
+        self.input_line.setPlaceholderText("Enter link") 
 
         self.progress_bar = QProgressBar(self)
         self.progress_bar.setValue(0)
@@ -36,11 +44,13 @@ class MainWindow(QMainWindow):
         self.load_info_button.clicked.connect(self.load_info_thread)
 
         layout = QVBoxLayout()
+
         layout.addWidget(self.input_line)
         layout.addWidget(self.load_info_button)
         layout.addWidget(self.choose_settings)
         layout.addWidget(self.download_button)
         layout.addWidget(self.progress_bar)
+        layout.addWidget(self.label)
 
         container = QWidget()
         container.setLayout(layout)
@@ -66,7 +76,6 @@ class MainWindow(QMainWindow):
         yt = YouTube(link1, on_progress_callback=self.on_progress)
         itag = list(self.available_settings.keys())[list(self.available_settings.values()).index(settings)]
         stream = yt.streams.get_by_itag(itag)
-        print(stream)
         stream.download()
 
     def load_info(self, link):
@@ -81,8 +90,21 @@ class MainWindow(QMainWindow):
                 self.available_settings[stream.itag] = description
         self.choose_settings.addItems(self.available_settings.values())
 
+        self.url = yt.thumbnail_url
+        self.getAndSetImageFromURL(self.url)
+
     def item_selected(self):
         self.selected_settings = self.choose_settings.currentText()
+    
+    def getAndSetImageFromURL(self,imageURL):
+        try:
+            request = requests.get(imageURL)
+            self.pixmap.loadFromData(request.content)
+            self.pixmap = self.pixmap.scaled(160,120)
+            self.label.setPixmap(self.pixmap)
+            QApplication.processEvents()
+        except:
+            pass
 
 if __name__ == '__main__':
     main()
