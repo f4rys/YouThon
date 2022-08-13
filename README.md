@@ -1,4 +1,4 @@
-<div align="center">
+<div align="center" style="padding-top:10%; padding-bottom:3%">
   <p>
     <img src="https://imgur.com/ApNk70Q.png" width="295" height="46"/>
   </p>

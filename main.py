@@ -7,8 +7,6 @@ from PyQt6.QtGui import QPixmap, QIcon
 from PyQt6.QtCore import Qt
 import requests
 
-# https://www.youtube.com/watch?v=D-eDNDfU3oY
-
 pytube.request.default_range_size = 1048576
 
 def main():
