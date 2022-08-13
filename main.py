@@ -1,9 +1,10 @@
 from pytube import YouTube
 import pytube
-from PyQt6.QtWidgets import QApplication, QWidget, QComboBox, QMainWindow, QVBoxLayout, QPushButton, QLineEdit, QProgressBar, QLabel
+from PyQt6.QtWidgets import QApplication, QWidget, QComboBox, QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit, QProgressBar, QLabel, QGridLayout
 import sys
 from threading import Thread
-from PyQt6.QtGui import QPixmap, QColor
+from PyQt6.QtGui import QPixmap, QIcon
+from PyQt6.QtCore import Qt
 import requests
 
 # https://www.youtube.com/watch?v=D-eDNDfU3oY
@@ -23,16 +24,17 @@ class MainWindow(QMainWindow):
 
         self.available_settings = {}
         self.selected_settings = None
-        self.url = ''
 
         self.choose_settings = QComboBox()
         self.choose_settings.currentTextChanged.connect(self.item_selected)
 
-        self.label  = QLabel()
-        self.pixmap = QPixmap()
+        self.video_thumbnail  = QLabel()
+        self.pixmap = QPixmap('thumbnail_placeholder.png')
+        self.video_thumbnail.setPixmap(self.pixmap)
 
         self.download_button = QPushButton("Download", self)
         self.download_button.clicked.connect(self.download)
+        self.download_button.setEnabled(False)
 
         self.input_line = QLineEdit(self)
         self.input_line.setPlaceholderText("Enter link") 
@@ -43,18 +45,35 @@ class MainWindow(QMainWindow):
         self.load_info_button = QPushButton("Load video info", self)
         self.load_info_button.clicked.connect(self.load_info_thread)
 
-        layout = QVBoxLayout()
+        self.video_title = QLabel()
+        self.video_author = QLabel()
+        self.user_info = QLabel()
 
-        layout.addWidget(self.input_line)
-        layout.addWidget(self.load_info_button)
-        layout.addWidget(self.choose_settings)
-        layout.addWidget(self.download_button)
-        layout.addWidget(self.progress_bar)
-        layout.addWidget(self.label)
+        self.video_title.setText("Title: ")
+        self.video_author.setText("Author: ")
+        self.user_info.setStyleSheet("color: gray")
+        self.user_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        layout = QGridLayout()
+        layout.setSpacing(10)
+        layout.setColumnMinimumWidth(0,300)
+
+        layout.addWidget(self.input_line,0,0)
+        layout.addWidget(self.load_info_button,1,0)
+        layout.addWidget(self.choose_settings,2,0)
+        layout.addWidget(self.download_button,3,0)
+        layout.addWidget(self.progress_bar,4,0)
+        layout.addWidget(self.user_info,5,0)
+
+        layout.addWidget(self.video_title,0,1)
+        layout.addWidget(self.video_author,1,1)
+        layout.addWidget(self.video_thumbnail,2,1,5,1)
 
         container = QWidget()
         container.setLayout(layout)
         self.setCentralWidget(container)
+        self.setWindowTitle('YouThon')
+        self.setWindowIcon(QIcon('icon.png'))
         
     def download(self):
         downloading_process = Thread(target=self.execute_process(self.input_line.text(), self.selected_settings))
@@ -70,18 +89,17 @@ class MainWindow(QMainWindow):
         self.progress_bar.setValue(progress)
     
     def execute_process(self, link, settings):
-        link1 = 'https://www.youtube.com/watch?v=D-eDNDfU3oY'
         self.progress_bar.setValue(0)
         self.input_line.clear()
-        yt = YouTube(link1, on_progress_callback=self.on_progress)
+        yt = YouTube(link, on_progress_callback=self.on_progress)
         itag = list(self.available_settings.keys())[list(self.available_settings.values()).index(settings)]
         stream = yt.streams.get_by_itag(itag)
         stream.download()
+        self.user_info.setText("Media downloaded succesfully.")
 
     def load_info(self, link):
-        link1 = 'https://www.youtube.com/watch?v=D-eDNDfU3oY'
         self.choose_settings.clear()
-        yt = YouTube(link1, on_progress_callback=self.on_progress)
+        yt = YouTube(link, on_progress_callback=self.on_progress)
         for index, stream in enumerate(yt.streams.filter(type='video').order_by('resolution'), 1):
                 description = '[' + str(index) + '] ' + str(stream.type) + ' ' + str(stream.resolution) + ' ' +  str(stream.fps) + 'fps'
                 self.available_settings[stream.itag] = description
@@ -90,8 +108,11 @@ class MainWindow(QMainWindow):
                 self.available_settings[stream.itag] = description
         self.choose_settings.addItems(self.available_settings.values())
 
-        self.url = yt.thumbnail_url
-        self.getAndSetImageFromURL(self.url)
+        self.getAndSetImageFromURL(yt.thumbnail_url)
+        self.download_button.setEnabled(True)
+        self.video_title.setText(f"Title: {yt.title}")
+        self.video_author.setText(f"Author: {yt.author}")
+        self.user_info.setText("Information loaded succesfully.")
 
     def item_selected(self):
         self.selected_settings = self.choose_settings.currentText()
@@ -101,7 +122,7 @@ class MainWindow(QMainWindow):
             request = requests.get(imageURL)
             self.pixmap.loadFromData(request.content)
             self.pixmap = self.pixmap.scaled(160,120)
-            self.label.setPixmap(self.pixmap)
+            self.video_thumbnail.setPixmap(self.pixmap)
             QApplication.processEvents()
         except:
             pass
