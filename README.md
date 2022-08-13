@@ -1,4 +1,4 @@
-<div align="center" style="padding-top:10%; padding-bottom:3%">
+<div align="center">
   <p>
     <img src="https://imgur.com/ApNk70Q.png" width="295" height="46"/>
   </p>
@@ -20,7 +20,7 @@ YouThon is a straightforward GUI application to download YouTube media in variou
 
 - Loading info about YouTube video: title, author's channel, thumbnail and available download options
 - Downloading desired audio/video media to the folder in which the script is executed
-- Displaying download status as an progress bar
+- Displaying download status as a progress bar
 
 ## Disclaimer
 
