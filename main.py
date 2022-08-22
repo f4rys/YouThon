@@ -12,10 +12,11 @@ from pydub import AudioSegment
 import requests
 import ffmpeg
 
+
 class MainWindow(QMainWindow):
 
-    ''' Main class of the script. It builds a GUI during program startup 
-    and it holds all methods that can be called by user 
+    ''' Main class of the script. It builds a GUI during program startup
+    and it holds all methods that can be called by user
     while interacting with interface. '''
 
     def __init__(self, link="", selected_settings=None, available_settings={}):
@@ -40,7 +41,8 @@ class MainWindow(QMainWindow):
         self.choose_settings.currentTextChanged.connect(
             self.set_selected_option)
 
-        # Button to execute downloading process, disabled when no information loaded
+        # Button to execute downloading process
+        # is disabled when no information loaded
         self.download_button = QPushButton("Download", self)
         self.download_button.clicked.connect(lambda: Thread(
             self.download_stream(self.link, self.selected_settings)).start())
@@ -109,12 +111,12 @@ class MainWindow(QMainWindow):
 
     def download_stream(self, link, settings):
 
-        ''' Determines the type of media requested to parse 
-        and attempts to download it. Once a raw audio-only or 
-        video-only stream is downloaded, converts it to user-friendly 
-        format, embedding an audio into video stream and saving the 
-        output in MP4 format, or exporting MP3 media 
-        from MP4 audio-only raw file. If an error occurs, 
+        ''' Determines the type of media requested to parse
+        and attempts to download it. Once a raw audio-only or
+        video-only stream is downloaded, converts it to user-friendly
+        format, embedding an audio into video stream and saving the
+        output in MP4 format, or exporting MP3 media
+        from MP4 audio-only raw file. If an error occurs,
         user is notified and prompted as to try again.
         '''
         # Resetting the following values
@@ -126,10 +128,11 @@ class MainWindow(QMainWindow):
             # Notifying user that downloading has started succesfully
             self.status.setText("Downloading selected media...")
 
-            # Creating pytube.YouTube object and determining an 
+            # Creating pytube.YouTube object and determining an
             # itag for the media options selected by user
             yt = YouTube(link, on_progress_callback=self.monitor_progress)
-            itag = list(self.available_settings.keys())[list(self.available_settings.values()).index(settings)]
+            itag = list(self.available_settings.keys())[list(
+                self.available_settings.values()).index(settings)]
             stream = yt.streams.get_by_itag(itag)
 
             # If video stream was selected
@@ -137,22 +140,24 @@ class MainWindow(QMainWindow):
 
                 stream_audio = yt.streams.get_audio_only()
 
-                # Declaring filenames. Characters forbidden for filenames 
+                # Declaring filenames. Characters forbidden for filenames
                 # in Windows are being removed from final output name.
                 filename_audio_temporary = 'temp.' + str(stream_audio.subtype)
                 filename_video_temporary = 'temp2.mp4'
                 filename_output = yt.title + '.mp4'
-                filename_output = "".join(i for i in filename_output if i not in "\/:*?<>|")
+                filename_output = "".join(
+                    i for i in filename_output if i not in "\/:*?<>|")
 
                 # Audio and video downloaded separately to temporary files
                 stream.download(filename=filename_video_temporary)
                 stream_audio.download(filename=filename_audio_temporary)
 
-                # Concatenating audio and video tracks into MP4 
+                # Concatenating audio and video tracks into MP4
                 # file named after video title on YouTube
                 input_video = ffmpeg.input(filename_video_temporary)
                 input_audio = ffmpeg.input(filename_audio_temporary)
-                ffmpeg.concat(input_video, input_audio, v=1, a=1).output(filename_output).run(overwrite_output=True)
+                ffmpeg.concat(input_video, input_audio, v=1, a=1).output(
+                    filename_output).run(overwrite_output=True)
 
                 # Removing temporary files
                 os.remove(filename_video_temporary)
@@ -161,19 +166,21 @@ class MainWindow(QMainWindow):
             # If audio stream was selected
             else:
 
-                # Declaring filenames. Characters forbidden for filenames 
+                # Declaring filenames. Characters forbidden for filenames
                 # in Windows are being removed from final output name.
                 filename_temporary = 'temp.' + str(stream.subtype)
                 filename_output = yt.title + '.mp3'
-                filename_output = "".join(i for i in filename_output if i not in "\/:*?<>|")
+                filename_output = "".join(
+                    i for i in filename_output if i not in "\/:*?<>|")
 
                 # Extracting bitrate value without unit
                 bitrate = str(stream.bitrate)[:-3]
 
-                # Downloading raw stream and converting to 
+                # Downloading raw stream and converting to
                 # MP3 file while preserving its original bitrate
                 stream.download(filename=filename_temporary)
-                AudioSegment.from_file(filename_temporary).export(filename_output, format="mp3", bitrate=bitrate)
+                AudioSegment.from_file(filename_temporary).export(
+                    filename_output, format="mp3", bitrate=bitrate)
 
                 # Removing temporary file
                 os.remove(filename_temporary)
@@ -182,14 +189,16 @@ class MainWindow(QMainWindow):
             self.status.setText("Media downloaded succesfully.")
 
         except:
-            # Notifying user and disabling download button whenever an error occurs.
-            self.status.setText("Unfortunately, something went wrong. Try another option.")
+            # Notifying user and disabling download
+            # button whenever an error occurs.
+            self.status.setText("Unfortunately, something went wrong. \
+            Try another option.")
             self.download_button.setEnabled(False)
 
     def load_info(self, link):
 
-        ''' Loads information on current YouTube video such as its 
-        title, author's channel name, thumbnail and available media 
+        ''' Loads information on current YouTube video such as its
+        title, author's channel name, thumbnail and available media
         options from user provided link.
         '''
         # Resetting the following values
@@ -198,17 +207,20 @@ class MainWindow(QMainWindow):
         self.available_settings.clear()
 
         try:
-            # Creating pytube.YouTube object to extract 
+            # Creating pytube.YouTube object to extract
             # information regarding current video.
             yt = YouTube(link)
 
-            # Building a list of available media 
+            # Building a list of available media
             # settings and adding it to drop-down menu
-            for stream in yt.streams.filter(subtype='mp4').order_by('resolution'):
+            for stream in yt.streams.filter(
+                        subtype='mp4').order_by('resolution'):
                 if stream.is_progressive == 0:
-                    description = 'mp4 ' + str(stream.resolution) + ' ' + str(stream.fps) + 'fps '
+                    description = 'mp4 ' + str(
+                        stream.resolution) + ' ' + str(stream.fps) + 'fps '
                     self.available_settings[stream.itag] = description
-            for stream in yt.streams.filter(type='audio').order_by('abr'):
+            for stream in yt.streams.filter(
+                        type='audio').order_by('abr'):
                 description = 'mp3 ' + str(stream.abr)
                 self.available_settings[stream.itag] = description
             self.choose_settings.addItems(self.available_settings.values())
@@ -224,13 +236,15 @@ class MainWindow(QMainWindow):
             self.status.setText("Information loaded succesfully.")
 
         except:
-            # Notifying user and disabling download button whenever an error occurs.
-            self.status.setText("Unfortunately, something went wrong. Try another link.")
+            # Notifying user and disabling download
+            # button whenever an error occurs.
+            self.status.setText("Unfortunately, something went wrong. \
+            Try another link.")
             self.download_button.setEnabled(False)
 
     def set_selected_option(self):
 
-        '''Assigning currently selected media option to a variable 
+        '''Assigning currently selected media option to a variable
         later used as an argument when attempting download process'''
 
         self.selected_settings = self.choose_settings.currentText()
@@ -242,6 +256,7 @@ class MainWindow(QMainWindow):
         self.thumbnail_pixmap.loadFromData(requests.get(imageURL).content)
         self.thumbnail_pixmap = self.thumbnail_pixmap.scaled(160, 120)
         self.video_thumbnail.setPixmap(self.thumbnail_pixmap)
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
