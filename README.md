@@ -6,21 +6,22 @@
 
 # YouThon
 
-YouThon is a straightforward GUI application to download YouTube media in various formats. Built with PyTube and PyQt6, it takes YouTube video link as an input and loads information about it and available download options.
+YouThon is a simple GUI application to download YouTube media in various formats. Built with PyTube and PyQt6, it takes YouTube video link as an input and loads information about it and available download options. Then media can be downloaded in MP4 or MP3 format.
 
 ## Screenshot
 
 <div align="center">
   <p>
-    <img src="https://imgur.com/rCvkTHr.png"/>
+    <img src="https://imgur.com/6TAg7fS.png"/>
   </p>
 </div>
 
 ## Features
 
 - Loading info about YouTube video: title, author's channel, thumbnail and available download options
-- Downloading desired audio/video media to the folder in which the script is executed
-- Displaying download status as a progress bar
+- Downloading raw audio/video media to the folder in which the script is executed
+- Converting it to desired format
+- Displaying downloading status as a progress bar
 
 ## Disclaimer
 
